@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Gestión de Reservas</title>
+    <link rel="stylesheet" href="/css/style_reservas.css" />
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Gestión de Reservas de Salas</h1>
+        <p>Organiza tus espacios de forma eficiente</p>
+    </header>
+
+    <section class="form-section">
+        <h2>Nueva Reserva</h2>
+    <form id="reservaForm">
+        <div class="form-group">
+            <label for="usuario">Usuario</label>
+            <input type="text" id="usuario" required />
+        </div>
+        <div class="form-group">
+            <label for="sala">Sala</label>
+            <select id="sala" required>
+            <option value="">Selecciona una sala</option>
+            <option value="Sala A">Sala A</option>
+            <option value="Sala B">Sala B</option>
+            <option value="Sala C">Sala C</option>
+        </select>
+        </div>
+        <div class="form-group">
+            <label for="fecha">Fecha</label>
+            <input type="date" id="fecha" required />
+        </div>
+        <div class="form-group">
+            <label for="hora">Hora</label>
+            <input type="time" id="hora" required />
+        </div>
+        <button type="submit" class="btn">Reservar</button>
+        <div id="mensaje" class="mensaje"></div>
+    </form>
+    </section>
+
+    <section class="reservas-section">
+        <h2>Reservas Registradas</h2>
+    <table id="tablaReservas">
+        <thead>
+        <tr>
+            <th>Usuario</th>
+            <th>Sala</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    </section>
+</div>
+<style>
+body {
+    font-family: "Segoe UI", sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 30px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    margin-bottom: 5px;
+    font-size: 28px;
+    color: #333;
+}
+
+header p {
+    color: #777;
+    font-size: 16px;
+}
+
+.form-section, .reservas-section {
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #333;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+input:focus, select:focus {
+    border-color: #0077cc;
+    outline: none;
+}
+
+.btn {
+    background-color: #0077cc;
+    color: #fff;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.btn:hover {
+    background-color: #005fa3;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background-color: #fafafa;
+}
+
+th, td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background-color: #e9ecef;
+}
+
+.mensaje {
+    margin-top: 10px;
+    font-size: 14px;
+    color: green;
+    transition: opacity 0.5s;
+}
+</style>
+
+<script>
+const form = document.getElementById("reservaForm");
+const tabla = document.querySelector("#tablaReservas tbody");
+const mensaje = document.getElementById("mensaje");
+const reservas = [];
+
+form.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const usuario = document.getElementById("usuario").value.trim();
+    const sala = document.getElementById("sala").value;
+    const fecha = document.getElementById("fecha").value;
+    const hora = document.getElementById("hora").value;
+
+if (!esHorarioLaboral(hora)) {
+    mostrarMensaje("Reserva fuera del horario laboral (08:00 - 18:00)", "red");
+    return;
+}
+
+const duplicada = reservas.some(
+    (r) => r.sala === sala && r.fecha === fecha && r.hora === hora
+);
+if (duplicada) {
+    mostrarMensaje("La sala ya está reservada en ese horario.", "red");
+    return;
+}
+
+    const reserva = { usuario, sala, fecha, hora };
+    reservas.push(reserva);
+    mostrarReservas();
+    form.reset();
+    alert("SU RESERVA SERA REGISTRADA.")
+    mostrarMensaje("¡Reserva realizada con éxito!", "green");
+});
+
+function esHorarioLaboral(hora) {
+    const [h] = hora.split(":").map(Number);
+    return h >= 8 && h < 18;
+}
+
+function mostrarReservas() {
+    tabla.innerHTML = "";
+    reservas.forEach((r, i) => {
+        const fila = document.createElement("tr");
+        fila.innerHTML = `
+            <td>${r.usuario}</td>
+            <td>${r.sala}</td>
+            <td>${r.fecha}</td>
+            <td>${r.hora}</td>
+            <td>
+                <button class="btn" style="background:#6c757d;" onclick="modificarReserva(${i})">Editar</button>
+                <button class="btn" style="background:#dc3545;" onclick="eliminarReserva(${i})">Eliminar</button>
+            </td>
+            `;
+            tabla.appendChild(fila);
+    });
+}
+
+function modificarReserva(index) {
+    const r = reservas[index];
+        document.getElementById("usuario").value = r.usuario;
+        document.getElementById("sala").value = r.sala;
+        document.getElementById("fecha").value = r.fecha;
+        document.getElementById("hora").value = r.hora;
+        reservas.splice(index, 1);
+        mostrarReservas();
+}
+
+function eliminarReserva(index) {
+    reservas.splice(index, 1);
+    mostrarReservas();
+    alert("Seguro que desea eliminar su reserva")
+    mostrarMensaje("Reserva eliminada.", "orange");
+}
+
+function mostrarMensaje(texto, color) {
+    mensaje.textContent = texto;
+    mensaje.style.color = color;
+    mensaje.style.opacity = 1;
+    setTimeout(() => {
+        mensaje.style.opacity = 0;
+}, 3000);
+}
+  
+</script>
+</body>
+</html>
